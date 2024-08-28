@@ -1,10 +1,16 @@
-// firebaseConfig.js
+import dotenv from "dotenv";
+dotenv.config();
 
 export const firebaseConfig = {
-  apiKey: "AIzaSyC-Y7Atsh7hxx-bdjoPgeJKTGaej0A35cc",
-  authDomain: "backend-challenge-f1.firebaseapp.com",
-  projectId: "backend-challenge-f1",
-  storageBucket: "backend-challenge-f1.appspot.com",
-  messagingSenderId: "323591323612",
-  appId: "1:323591323612:web:7b606c01ea75e043191919",
+  type: process.env.FIREBASE_TYPE,
+  projectId: process.env.FIREBASE_PROJECT_ID, // Alterado de project_id para projectId
+  private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
+  private_key: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, "\n"),
+  client_email: process.env.FIREBASE_CLIENT_EMAIL,
+  client_id: process.env.FIREBASE_CLIENT_ID,
+  auth_uri: process.env.FIREBASE_AUTH_URI,
+  token_uri: process.env.FIREBASE_TOKEN_URI,
+  auth_provider_x509_cert_url: process.env.FIREBASE_AUTH_PROVIDER_X509_CERT_URL,
+  client_x509_cert_url: process.env.FIREBASE_CLIENT_X509_CERT_URL,
+  universe_domain: process.env.FIREBASE_UNIVERSE_DOMAIN,
 };
