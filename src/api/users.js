@@ -4,6 +4,9 @@ import {
   addUser,
   deleteUserByEmail,
   updateUserPassword,
+  getEmails,
+  addEmail,
+  deleteEmailById
 } from "../functions/dbFunctions.js";
 
 const api = express();
@@ -65,6 +68,61 @@ api.put("/users/password", async (req, res) => {
     res.status(200).send("Password updated successfully!");
   } catch (error) {
     res.status(400).json({ error: error.message });
+  }
+});
+
+
+// EMAILS
+
+// Route to get all emails
+api.get("/users/:userId/emails", async (req, res) => {
+  const { userId } = req.params;
+
+  try {
+    const emails = await getEmails(userId);
+    res.status(200).json(emails);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch emails" });
+  }
+});
+
+// Route to add a new email for user id
+api.post("/users/:userId/emails", async (req, res) => {
+  const { userId } = req.params;
+  const emailData = req.body;
+
+  try {
+      const result = await addEmail(userId, emailData);
+      res.status(201).json(result);
+  } catch (error) {
+      res.status(500).json({ error: "Failed to add email", log: error });
+  }
+});
+
+
+// Route to delete a email from userId and emailId
+api.delete("/users/:userId/emails/:emailId", async (req, res) => {
+  const { userId, emailId } = req.params;
+
+  try {
+      const result = await deleteEmailById(userId, emailId);
+      res.status(200).json(result);
+  } catch (error) {
+      res.status(500).json({ error: "Failed to delete email" });
+  }
+});
+
+
+// Route to update user email
+api.put("/users/:userId/emails/:emailId", async (req, res) => {
+  const { userId, emailId } = req.params;
+  const emailData = req.body;
+
+  try {
+      const result = await updateEmailById(userId, emailId, emailData);
+      res.status(200).json(result);
+  } catch (error) {
+      res.status(500).json({ error: "Failed to update email" });
   }
 });
 
