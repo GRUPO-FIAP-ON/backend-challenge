@@ -1,21 +1,10 @@
 import express from "express";
-import {
-  getUsers,
-  getUserByEmail,
-  addUser,
-  deleteUserByEmail,
-  updateUserPassword,
-  getEmails,
-  addEmail,
-  deleteEmailById,
-  getEmailById,
-  getEmailsByLocation,
-  loginUser,
-  searchEmails
-} from "../functions/dbFunctions.js";
+import { getUsers, addUser, deleteUserByEmail, updateUserPassword, getUserByEmail, loginUser,} from "../utils/db/usersFunctions.js ";
+import { getEmails, addEmail, deleteEmailById, getEmailById, getEmailsByLocation, searchEmails} from "../utils/db/emailFunctions.js"
 
 const api = express();
 api.use(express.json());
+
 
 // Route to test the API
 api.get("/", (req, res) => {
