@@ -1,4 +1,4 @@
-import api from "./src/api/users.js";
+import api from "./src/api/routes.js";
 
 const PORT = process.env.PORT || 3000;
 
