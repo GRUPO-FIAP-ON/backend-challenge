@@ -1,12 +1,17 @@
 import express from "express";
 import {
   getUsers,
+  getUserByEmail,
   addUser,
   deleteUserByEmail,
   updateUserPassword,
   getEmails,
   addEmail,
-  deleteEmailById
+  deleteEmailById,
+  getEmailById,
+  getEmailsByLocation,
+  loginUser,
+  searchEmails
 } from "../functions/dbFunctions.js";
 
 const api = express();
@@ -24,6 +29,18 @@ api.get("/users", async (req, res) => {
     res.status(200).json(users);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+// Get user by email
+api.get("/users/:email", async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const emails = await getUserByEmail(email);
+    res.status(200).json(emails);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch emails" });
   }
 });
 
@@ -72,6 +89,19 @@ api.put("/users/password", async (req, res) => {
 });
 
 
+// Route to login in the app
+api.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+
+  try {
+    const user = await loginUser(email, password);
+    res.status(200).json(user);
+  } catch (error) {
+    res.status(401).json({ error: error.message });
+  }
+});
+
+
 // EMAILS
 
 // Route to get all emails
@@ -85,6 +115,20 @@ api.get("/users/:userId/emails", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch emails" });
   }
 });
+
+
+// Route to get email by id
+api.get("/users/:userId/emails/:emailId", async (req, res) => {
+  const { userId, emailId } = req.params;
+
+  try {
+    const emails = await getEmailById(userId, emailId);
+    res.status(200).json(emails);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch emails" });
+  }
+});
+
 
 // Route to add a new email for user id
 api.post("/users/:userId/emails", async (req, res) => {
@@ -112,18 +156,29 @@ api.delete("/users/:userId/emails/:emailId", async (req, res) => {
   }
 });
 
-
-// Route to update user email
-api.put("/users/:userId/emails/:emailId", async (req, res) => {
-  const { userId, emailId } = req.params;
-  const emailData = req.body;
+//  Route to list all emails from specific location
+api.get("/users/:userId/emails/location/:location", async (req, res) => {
+  const { userId, location } = req.params;
 
   try {
-      const result = await updateEmailById(userId, emailId, emailData);
-      res.status(200).json(result);
+    const emails = await getEmailsByLocation(userId, location);
+    res.status(200).json(emails);
   } catch (error) {
-      res.status(500).json({ error: "Failed to update email" });
+    res.status(500).json({ error: "Fail to search emails" });
   }
 });
+
+// Route to search emails
+api.get("/users/:userId/emails/search/:searchTerm", async (req, res) => {
+  const { userId, searchTerm } = req.params;
+
+  try {
+    const emails = await searchEmails(userId, searchTerm);
+    res.status(200).json(emails);
+  } catch (error) {
+    res.status(500).json({ error: "Error to search emails" });
+  }
+});
+
 
 export default api;
