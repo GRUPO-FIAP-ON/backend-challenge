@@ -22,8 +22,33 @@ const db = getFirestore(app);
 async function getUsers() {
   const usersCol = collection(db, "users");
   const usersSnapshot = await getDocs(usersCol);
-  const usersList = usersSnapshot.docs.map((doc) => doc.data());
+  const usersList = usersSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
   return usersList;
+}
+
+async function getUserByEmail(email) {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+
+    const q = query(usersCollectionRef, where('email', '==', email));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('User not found');
+    }
+
+    const userDoc = querySnapshot.docs[0];
+
+    return { id: userDoc.id, ...userDoc.data() };
+
+  } catch (error) {
+    throw new Error('Error to search user: ' + error.message);
+  }
 }
 
 // Check if username already exists
@@ -139,29 +164,84 @@ async function updateUserPassword(
   }
 }
 
+
+async function loginUser(email, password) {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+
+    const q = query(usersCollectionRef, where('email', '==', email));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('User not found');
+    }
+
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    const isPasswordMatch = await bcrypt.compare(password, userData.password);
+    if (!isPasswordMatch) {
+      throw new Error('Incorrect password');
+    }
+
+    const { password: _, ...userWithoutPassword } = userData;
+
+    return { id: userDoc.id, ...userWithoutPassword };
+
+  } catch (error) {
+    throw new Error('Error during login: ' + error.message);
+  }
+}
+
+
 // Get all emails from User
 async function getEmails(userId) {
   const userDocRef = doc(db, "users", userId);
+
   // Verifica se o documento do usuário existe
   const userDocSnapshot = await getDoc(userDocRef);
   if (!userDocSnapshot.exists()) {
-    throw new Error("Usuário não encontrado");
+    throw new Error("User not found");
   }
   // Referência à subcoleção 'emails' do usuário
   const emailsCol = collection(userDocRef, "emails");
+
   // Obtém todos os documentos (e-mails) da subcoleção 'emails'
   const emailsSnapshot = await getDocs(emailsCol);
+
   //List all emails
-  const emailsList = emailsSnapshot.docs.map((doc) => doc.data());
-  
+  const emailsList = emailsSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
   return emailsList;
+}
+
+// Get a email by id
+async function getEmailById(userId, emailId) {
+  try {
+    const emailDocRef = doc(db, 'users', userId, 'emails', emailId);
+
+    const emailDoc = await getDoc(emailDocRef);
+
+    if (!emailDoc.exists()) {
+      throw new Error('Email not found');
+    }
+
+    return { id: emailDoc.id, ...emailDoc.data() };
+
+  } catch (error) {
+    throw new Error('Error to search email: ' + error.message);
+  }
 }
 
 async function addEmail(userId, emailData) {
   try {
     const userDocRef = doc(db, "users", userId);
     const emailsRef = collection(userDocRef, "emails");
-    
+
     //Add new email document
     const docRef = await addDoc(emailsRef, emailData);
 
@@ -176,7 +256,7 @@ async function deleteEmailById(userId, emailId) {
   try {
     const userDocRef = doc(db, "users", userId);
     const emailDocRef = doc(userDocRef, "emails", emailId);
-    
+
     //Delete email by email
     await deleteDoc(emailDocRef);
 
@@ -187,4 +267,74 @@ async function deleteEmailById(userId, emailId) {
   }
 }
 
-export { getUsers, addUser, deleteUserByEmail, updateUserPassword, getEmails, addEmail, deleteEmailById };
+// List all emails from specific location
+async function getEmailsByLocation(userId, location) {
+  try {
+    const emailsCollectionRef = collection(db, 'users', userId, 'emails');
+
+    const q = query(emailsCollectionRef, where('location', '==', location));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return [];
+    }
+
+    const emails = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+
+    return emails;
+  } catch (error) {
+    throw new Error('Error to search email by location: ' + location + error.message);
+  }
+}
+
+
+async function searchEmails(userId, searchTerm) {
+  try {
+    const emailsCollectionRef = collection(db, 'users', userId, 'emails');
+
+    // Create queries to search documents where field 'subject' or 'body' contains the string
+    const subjectQuery = query(emailsCollectionRef, where('subject', '>=', searchTerm), where('subject', '<=', searchTerm + '\uf8ff'));
+    const bodyQuery = query(emailsCollectionRef, where('body', '>=', searchTerm), where('body', '<=', searchTerm + '\uf8ff'));
+
+    const subjectSnapshot = await getDocs(subjectQuery);
+    const bodySnapshot = await getDocs(bodyQuery);
+
+    const combinedResults = [];
+
+    subjectSnapshot.forEach((doc) => {
+      combinedResults.push({ id: doc.id, ...doc.data() });
+    });
+
+    bodySnapshot.forEach((doc) => {
+      combinedResults.push({ id: doc.id, ...doc.data() });
+    });
+
+    // Remove duplicates
+    const uniqueResults = Array.from(new Set(combinedResults.map((email) => email.id)))
+      .map((id) => combinedResults.find((email) => email.id === id));
+
+    return uniqueResults;
+  } catch (error) {
+    throw new Error('Error to search emails: ' + error.message);
+  }
+}
+
+
+export { 
+  getUsers, 
+  getUserByEmail, 
+  addUser, 
+  deleteUserByEmail, 
+  updateUserPassword, 
+  getEmails, 
+  addEmail, 
+  deleteEmailById, 
+  getEmailById, 
+  getEmailsByLocation,
+  loginUser,
+  searchEmails
+};
