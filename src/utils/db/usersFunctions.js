@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore/lite";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../../database/firebaseConfig.js";
-import { detectSpam } from "../detectSpam.js";
 import bcrypt from "bcrypt";
 
 const app = initializeApp(firebaseConfig);
@@ -23,8 +22,33 @@ const db = getFirestore(app);
 async function getUsers() {
   const usersCol = collection(db, "users");
   const usersSnapshot = await getDocs(usersCol);
-  const usersList = usersSnapshot.docs.map((doc) => doc.data());
+  const usersList = usersSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+
   return usersList;
+}
+
+async function getUserByEmail(email) {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+
+    const q = query(usersCollectionRef, where('email', '==', email));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('User not found');
+    }
+
+    const userDoc = querySnapshot.docs[0];
+
+    return { id: userDoc.id, ...userDoc.data() };
+
+  } catch (error) {
+    throw new Error('Error to search user: ' + error.message);
+  }
 }
 
 // Check if username already exists
@@ -140,4 +164,40 @@ async function updateUserPassword(
   }
 }
 
-export { getUsers, addUser, deleteUserByEmail, updateUserPassword };
+async function loginUser(email, password) {
+  try {
+    const usersCollectionRef = collection(db, 'users');
+
+    const q = query(usersCollectionRef, where('email', '==', email));
+
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      throw new Error('User not found');
+    }
+
+    const userDoc = querySnapshot.docs[0];
+    const userData = userDoc.data();
+
+    const isPasswordMatch = await bcrypt.compare(password, userData.password);
+    if (!isPasswordMatch) {
+      throw new Error('Incorrect password');
+    }
+
+    const { password: _, ...userWithoutPassword } = userData;
+
+    return { id: userDoc.id, ...userWithoutPassword };
+
+  } catch (error) {
+    throw new Error('Error during login: ' + error.message);
+  }
+}
+
+export { 
+  getUsers, 
+  getUserByEmail, 
+  addUser, 
+  deleteUserByEmail, 
+  updateUserPassword, 
+  loginUser
+};
