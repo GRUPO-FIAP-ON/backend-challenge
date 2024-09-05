@@ -1,5 +1,5 @@
 import {
-   getFirestore,
+  getFirestore,
   collection,
   getDocs,
   getDoc,
@@ -22,9 +22,9 @@ const db = getFirestore(app);
 async function getUsers() {
   const usersCol = collection(db, "users");
   const usersSnapshot = await getDocs(usersCol);
-  const usersList = usersSnapshot.docs.map(doc => ({
+  const usersList = usersSnapshot.docs.map((doc) => ({
     id: doc.id,
-    ...doc.data()
+    ...doc.data(),
   }));
 
   return usersList;
@@ -32,22 +32,21 @@ async function getUsers() {
 
 async function getUserByEmail(email) {
   try {
-    const usersCollectionRef = collection(db, 'users');
+    const usersCollectionRef = collection(db, "users");
 
-    const q = query(usersCollectionRef, where('email', '==', email));
+    const q = query(usersCollectionRef, where("email", "==", email));
 
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     const userDoc = querySnapshot.docs[0];
 
     return { id: userDoc.id, ...userDoc.data() };
-
   } catch (error) {
-    throw new Error('Error to search user: ' + error.message);
+    throw new Error("Error to search user: " + error.message);
   }
 }
 
@@ -62,7 +61,7 @@ async function usernameExists(username) {
 // Add a new user to the database
 async function addUser(user) {
   try {
-    // Check if username already exists
+    // Validate username
     const username = user.username.toLowerCase();
     if (await usernameExists(username)) {
       throw new Error("Username already exists");
@@ -70,20 +69,19 @@ async function addUser(user) {
 
     // Create a hashed password
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(user.password, saltRounds);
+    const hashedPassword = await bcrypt.hash(user.password || "", saltRounds);
+
+    // Prepare user data with email based on username
+    const userData = {
+      email: `${username}@mailbird.com`.toLowerCase(),
+      password: hashedPassword,
+      createdAt: Timestamp.now(),
+      ...user, // Spread the user object to include all other optional fields
+    };
 
     // Add a new user to the database
     const userCol = collection(db, "users");
-    await addDoc(userCol, {
-      name: user.name,
-      lastName: user.lastName,
-      username: username,
-      email: `${username}@mailbird.com`.toLowerCase(),
-      birthDate: user.birthDate,
-      password: hashedPassword,
-      createdAt: Timestamp.now(),
-      preferences: user.preferences,
-    });
+    await addDoc(userCol, userData);
 
     console.log("Success to add user!");
   } catch (error) {
@@ -166,14 +164,14 @@ async function updateUserPassword(
 
 async function loginUser(email, password) {
   try {
-    const usersCollectionRef = collection(db, 'users');
+    const usersCollectionRef = collection(db, "users");
 
-    const q = query(usersCollectionRef, where('email', '==', email));
+    const q = query(usersCollectionRef, where("email", "==", email));
 
     const querySnapshot = await getDocs(q);
 
     if (querySnapshot.empty) {
-      throw new Error('User not found');
+      throw new Error("User not found");
     }
 
     const userDoc = querySnapshot.docs[0];
@@ -181,23 +179,22 @@ async function loginUser(email, password) {
 
     const isPasswordMatch = await bcrypt.compare(password, userData.password);
     if (!isPasswordMatch) {
-      throw new Error('Incorrect password');
+      throw new Error("Incorrect password");
     }
 
     const { password: _, ...userWithoutPassword } = userData;
 
     return { id: userDoc.id, ...userWithoutPassword };
-
   } catch (error) {
-    throw new Error('Error during login: ' + error.message);
+    throw new Error("Error during login: " + error.message);
   }
 }
 
-export { 
-  getUsers, 
-  getUserByEmail, 
-  addUser, 
-  deleteUserByEmail, 
-  updateUserPassword, 
-  loginUser
+export {
+  getUsers,
+  getUserByEmail,
+  addUser,
+  deleteUserByEmail,
+  updateUserPassword,
+  loginUser,
 };
