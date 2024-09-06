@@ -53,8 +53,11 @@ async function getUserByEmail(email) {
 // Check if username already exists
 async function usernameExists(username) {
   const usersCol = collection(db, "users");
-  const q = query(usersCol, where("username", "==", username.toLowerCase()));
+  const q = query(usersCol, where("username", "==", username));
   const querySnapshot = await getDocs(q);
+  console.log(
+    `Checking if username exists: ${username}, found: ${!querySnapshot.empty}`
+  );
   return !querySnapshot.empty;
 }
 
@@ -62,7 +65,7 @@ async function usernameExists(username) {
 async function addUser(user) {
   try {
     // Validate username
-    const username = user.username.toLowerCase();
+    const username = user.username;
     if (await usernameExists(username)) {
       throw new Error("Username already exists");
     }
@@ -76,7 +79,8 @@ async function addUser(user) {
       email: `${username}@mailbird.com`.toLowerCase(),
       password: hashedPassword,
       createdAt: Timestamp.now(),
-      ...user, // Spread the user object to include all other optional fields
+      username,
+      ...user,
     };
 
     // Add a new user to the database
