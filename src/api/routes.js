@@ -1,10 +1,23 @@
 import express from "express";
-import { getUsers, addUser, deleteUserByEmail, updateUserPassword, getUserByEmail, loginUser,} from "../utils/db/usersFunctions.js ";
-import { getEmails, addEmail, deleteEmailById, getEmailById, getEmailsByLocation, searchEmails} from "../utils/db/emailFunctions.js"
+import {
+  getUsers,
+  addUser,
+  deleteUserByEmail,
+  updateUserPassword,
+  getUserByEmail,
+  loginUser,
+} from "../utils/db/usersFunctions.js ";
+import {
+  getEmails,
+  addEmail,
+  deleteEmailById,
+  getEmailById,
+  getEmailsByLocation,
+  searchEmails,
+} from "../utils/db/emailFunctions.js";
 
 const api = express();
 api.use(express.json());
-
 
 // Route to test the API
 api.get("/", (req, res) => {
@@ -77,7 +90,6 @@ api.put("/users/password", async (req, res) => {
   }
 });
 
-
 // Route to login in the app
 api.post("/login", async (req, res) => {
   const { email, password } = req.body;
@@ -89,7 +101,6 @@ api.post("/login", async (req, res) => {
     res.status(401).json({ error: error.message });
   }
 });
-
 
 // EMAILS
 
@@ -105,7 +116,6 @@ api.get("/users/:userId/emails", async (req, res) => {
   }
 });
 
-
 // Route to get email by id
 api.get("/users/:userId/emails/:emailId", async (req, res) => {
   const { userId, emailId } = req.params;
@@ -118,30 +128,28 @@ api.get("/users/:userId/emails/:emailId", async (req, res) => {
   }
 });
 
-
 // Route to add a new email for user id
 api.post("/users/:userId/emails", async (req, res) => {
   const { userId } = req.params;
   const emailData = req.body;
 
   try {
-      const result = await addEmail(userId, emailData);
-      res.status(201).json(result);
+    const result = await addEmail(userId, emailData);
+    res.status(201).json(result);
   } catch (error) {
-      res.status(500).json({ error: "Failed to add email", log: error });
+    res.status(500).json({ error: "Failed to add email", log: error });
   }
 });
-
 
 // Route to delete a email from userId and emailId
 api.delete("/users/:userId/emails/:emailId", async (req, res) => {
   const { userId, emailId } = req.params;
 
   try {
-      const result = await deleteEmailById(userId, emailId);
-      res.status(200).json(result);
+    const result = await deleteEmailById(userId, emailId);
+    res.status(200).json(result);
   } catch (error) {
-      res.status(500).json({ error: "Failed to delete email" });
+    res.status(500).json({ error: "Failed to delete email" });
   }
 });
 
@@ -168,6 +176,5 @@ api.get("/users/:userId/emails/search/:searchTerm", async (req, res) => {
     res.status(500).json({ error: "Error to search emails" });
   }
 });
-
 
 export default api;
