@@ -14,6 +14,7 @@ import {
   getEmailById,
   getEmailsByLocation,
   searchEmails,
+  updateEmailLocation
 } from "../utils/db/emailFunctions.js";
 
 const api = express();
@@ -174,6 +175,23 @@ api.get("/users/:userId/emails/search/:searchTerm", async (req, res) => {
     res.status(200).json(emails);
   } catch (error) {
     res.status(500).json({ error: "Error to search emails" });
+  }
+});
+
+
+api.put("/users/:userId/emails/:emailId/location", async (req, res) => {
+  const { userId, emailId } = req.params;
+  const { location } = req.body;
+
+  if (!location) {
+    return res.status(400).json({ error: "New location is required" });
+  }
+
+  try {
+    const result = await updateEmailLocation(userId, emailId, location);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update location" });
   }
 });
 

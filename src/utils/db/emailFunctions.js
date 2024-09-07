@@ -146,11 +146,26 @@ async function searchEmails(userId, searchTerm) {
   }
 }
 
+async function updateEmailLocation(userId, emailId, newLocation) {
+  try {
+    const emailDocRef = doc(db, 'users', userId, 'emails', emailId);
+
+    await updateDoc(emailDocRef, {
+      location: newLocation
+    });
+
+    return { message: 'Location updated successfully' };
+  } catch (error) {
+    throw new Error('Error updating location: ' + error.message);
+  }
+}
+
 export {  
   getEmails, 
   addEmail, 
   deleteEmailById, 
   getEmailById, 
   getEmailsByLocation,
-  searchEmails
+  searchEmails,
+  updateEmailLocation
 };
