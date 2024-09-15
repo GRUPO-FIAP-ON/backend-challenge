@@ -1,4 +1,6 @@
 import express from "express";
+import cors from "cors";
+
 import {
   getUsers,
   addUser,
@@ -18,7 +20,9 @@ import {
 } from "../utils/db/emailFunctions.js";
 
 const api = express();
+
 api.use(express.json());
+api.use(cors({origin: 'http://localhost:8081'}));
 
 // Route to test the API
 api.get("/", (req, res) => {
