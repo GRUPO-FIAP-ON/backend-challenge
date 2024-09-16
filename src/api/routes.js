@@ -97,7 +97,8 @@ api.put("/users/password", async (req, res) => {
 
 // Route to login in the app
 api.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
+  const email = `${username}@mailbird.com`.toLowerCase();
 
   try {
     const user = await loginUser(email, password);
