@@ -55,7 +55,7 @@ api.get("/users/:email", async (req, res) => {
 api.post("/users", async (req, res) => {
   try {
     await addUser(req.body);
-    res.status(201).send("User added successfully!");
+    res.status(201).send({});
   } catch (error) {
     if (error.message === "Username already exists") {
       res.status(400).json({
