@@ -24,7 +24,7 @@ async function getEmails(recipientId) {
   const usersRef = collection(db, 'users');
   const usersSnapshot = await getDocs(usersRef);
 
-  const recipientEmailsPromises = usersSnapshot.docs.map(async (userDoc) => {
+  const receivedEmailsPromises = usersSnapshot.docs.map(async (userDoc) => {
     const emailsRef = collection(userDoc.ref, 'emails');
     const q = query(emailsRef, where('recipient.id', '==', recipientId));
     const querySnapshot = await getDocs(q);
@@ -35,10 +35,27 @@ async function getEmails(recipientId) {
     }));
   });
 
-  const recipientEmailsArrays = await Promise.all(recipientEmailsPromises);
-  const recipientEmails = recipientEmailsArrays.flat();
+  const sentEmailsPromises = usersSnapshot.docs.map(async (userDoc) => {
+    const emailsRef = collection(userDoc.ref, 'emails');
+    const q = query(emailsRef, where('sender.id', '==', recipientId));
+    const querySnapshot = await getDocs(q);
 
-  return recipientEmails;
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
+
+  const receivedEmailsArrays = await Promise.all(receivedEmailsPromises);
+  const sentEmailsArrays = await Promise.all(sentEmailsPromises);
+
+  const receivedEmails = receivedEmailsArrays.flat();
+  const sentEmails = sentEmailsArrays.flat();
+
+  return {
+    receivedEmails,
+    sentEmails,
+  };
 }
 
 async function getEmailById(userId, emailId) {

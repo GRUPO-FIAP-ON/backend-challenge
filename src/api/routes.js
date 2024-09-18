@@ -183,7 +183,6 @@ api.get("/users/:userId/emails/search/:searchTerm", async (req, res) => {
   }
 });
 
-
 api.put("/users/:userId/emails/:emailId/location", async (req, res) => {
   const { userId, emailId } = req.params;
   const { location } = req.body;
