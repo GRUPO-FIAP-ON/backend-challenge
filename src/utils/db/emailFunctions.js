@@ -20,27 +20,25 @@ import { getUserByEmail } from "./usersFunctions.js";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-async function getEmails(userId) {
-  const userDocRef = doc(db, "users", userId);
+async function getEmails(recipientId) {
+  const usersRef = collection(db, 'users');
+  const usersSnapshot = await getDocs(usersRef);
 
-  // Verifica se o documento do usuário existe
-  const userDocSnapshot = await getDoc(userDocRef);
-  if (!userDocSnapshot.exists()) {
-    throw new Error("User not found");
-  }
-  // Referência à subcoleção 'emails' do usuário
-  const emailsCol = collection(userDocRef, "emails");
+  const recipientEmailsPromises = usersSnapshot.docs.map(async (userDoc) => {
+    const emailsRef = collection(userDoc.ref, 'emails');
+    const q = query(emailsRef, where('recipient.id', '==', recipientId));
+    const querySnapshot = await getDocs(q);
 
-  // Obtém todos os documentos (e-mails) da subcoleção 'emails'
-  const emailsSnapshot = await getDocs(emailsCol);
+    return querySnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+  });
 
-  //List all emails
-  const emailsList = emailsSnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data()
-  }));
+  const recipientEmailsArrays = await Promise.all(recipientEmailsPromises);
+  const recipientEmails = recipientEmailsArrays.flat();
 
-  return emailsList;
+  return recipientEmails;
 }
 
 async function getEmailById(userId, emailId) {
