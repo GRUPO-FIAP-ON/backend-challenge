@@ -76,11 +76,11 @@ async function addUser(user) {
 
     // Prepare user data with email based on username
     const userData = {
+      ...user,
       email: `${username}@mailbird.com`.toLowerCase(),
       password: hashedPassword,
       createdAt: Timestamp.now(),
-      username,
-      ...user,
+      username
     };
 
     // Add a new user to the database
