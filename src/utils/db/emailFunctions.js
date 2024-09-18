@@ -14,7 +14,7 @@ import {
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../../database/firebaseConfig.js";
 import { detectSpam } from "../detectSpam.js";
-import { getUserByEmail } from "./usersFunctions.js";
+import { getUserByEmail, getUserById } from "./usersFunctions.js";
 
 
 const app = initializeApp(firebaseConfig);
@@ -64,12 +64,24 @@ async function addEmail(userId, emailData) {
     const userDocRef = doc(db, "users", userId);
     const emailsRef = collection(userDocRef, "emails");
 
+    const { username: senderName, fullName: senderFullName, email: senderEmail } = await getUserById(userId);
+
     const recipientEmail = `${emailData.recipient}@mailbird.com`.toLowerCase();
-    const { id: recipientId } = await getUserByEmail(recipientEmail);
+    const { id: recipientId, username: recipientName, fullName: recipientFullName } = await getUserByEmail(recipientEmail);
 
     const docRef = await addDoc(emailsRef, {
-      sender: { id: userId },
-      recipient: { id: recipientId },
+      sender: { 
+        id: userId,
+        username: senderName, 
+        fullName: senderFullName, 
+        email: senderEmail
+      },
+      recipient: {
+        id: recipientId,
+        username: recipientName,
+        fullName: recipientFullName,
+        email: recipientEmail
+      },
       subject: emailData.subject,
       body: emailData.body,
       spam: emailData.spam,

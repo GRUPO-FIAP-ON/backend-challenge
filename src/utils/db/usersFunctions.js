@@ -50,6 +50,21 @@ async function getUserByEmail(email) {
   }
 }
 
+async function getUserById(userId) {
+  try {
+    const userDocRef = doc(db, 'users', userId);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      throw new Error("User not found");
+    }
+
+    return { id: userDoc.id, ...userDoc.data() };
+  } catch (error) {
+    throw new Error("Error to search user: " + error.message);
+  }
+}
+
 // Check if username already exists
 async function usernameExists(username) {
   const usersCol = collection(db, "users");
@@ -197,6 +212,7 @@ async function loginUser(email, password) {
 export {
   getUsers,
   getUserByEmail,
+  getUserById,
   addUser,
   deleteUserByEmail,
   updateUserPassword,
