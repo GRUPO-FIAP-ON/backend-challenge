@@ -1,5 +1,5 @@
 import {
-   getFirestore,
+  getFirestore,
   collection,
   getDocs,
   getDoc,
@@ -9,11 +9,12 @@ import {
   query,
   where,
   doc,
-  Timestamp,
+  Timestamp
 } from "firebase/firestore/lite";
 import { initializeApp } from "firebase/app";
 import { firebaseConfig } from "../../../database/firebaseConfig.js";
 import { detectSpam } from "../detectSpam.js";
+import { getUserByEmail } from "./usersFunctions.js";
 
 
 const app = initializeApp(firebaseConfig);
@@ -65,9 +66,18 @@ async function addEmail(userId, emailData) {
     const userDocRef = doc(db, "users", userId);
     const emailsRef = collection(userDocRef, "emails");
 
-    //Add new email document
-    const docRef = await addDoc(emailsRef, emailData);
+    const recipientEmail = `${emailData.recipient}@mailbird.com`.toLowerCase();
+    const { id: recipientId } = await getUserByEmail(recipientEmail);
 
+    const docRef = await addDoc(emailsRef, {
+      sender: { id: userId },
+      recipient: { id: recipientId },
+      subject: emailData.subject,
+      body: emailData.body,
+      spam: emailData.spam,
+      flagged: false,
+      createdAt: Timestamp.now().toDate(),
+    });
 
     return { message: 'Success to add email', id: docRef.id };
   } catch (error) {
